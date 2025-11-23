@@ -195,6 +195,12 @@ function App() {
                     </span>
                     <span style={{display:'flex',alignItems:'center'}}>Báo cáo</span>
                   </Link>
+                  <Link className="navbar-item" to="/recycle" style={{display:'flex',alignItems:'center',justifyContent:'center',gap:'7px',padding:'0.75rem 0.5rem'}}>
+                    <span style={{display:'flex',alignItems:'center'}}>
+                      <svg width="16" height="16" style={{verticalAlign:'middle'}} fill="none" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="3" stroke="#fff" strokeWidth="2"/><path d="M9 9l6 6m0-6l-6 6" stroke="#fff" strokeWidth="2"/></svg>
+                    </span>
+                    <span style={{display:'flex',alignItems:'center'}}>Khôi phục dữ liệu</span>
+                  </Link>
                   <Link className="navbar-item" to="/" style={{display:'flex',alignItems:'center',justifyContent:'center',gap:'7px',padding:'0.75rem 0.5rem'}}>
                     <span style={{display:'flex',alignItems:'center'}}>
                       <svg width="18" height="18" style={{verticalAlign:'middle'}} fill="none" viewBox="0 0 24 24"><path d="M3 10v4a1 1 0 0 0 1 1h3l7 5V4l-7 5H4a1 1 0 0 0-1 1z" stroke="#fff" strokeWidth="2"/><path d="M16 17a3 3 0 0 0 6 0" stroke="#fff" strokeWidth="2"/></svg>
