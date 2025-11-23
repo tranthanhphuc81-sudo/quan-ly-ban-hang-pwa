@@ -1,0 +1,3 @@
+- [x] Đã khởi tạo dự án React + Vite dạng PWA, gồm các phân hệ: Quản lý Hàng hóa, Bán hàng/Tính tiền, Báo cáo cơ bản, và một trang Standalone.
+- [x] Đã tạo các file cấu trúc cơ bản, manifest, service worker, README.md.
+- [ ] Tiếp tục phát triển chức năng từng phân hệ theo yêu cầu tối giản.

@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý bán hàng Standalone</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <style>
+    body { background: #f8f8ff; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; }
+    .container { max-width: 900px; margin: 0 auto; padding: 0 1.2em; }
+    .section { padding: 1.5rem 0 0.5rem 0; }
+    .tabs.is-fullwidth { background: #fff; border-bottom: 1.5px solid #e3e3e3; box-shadow: none; border-radius: 0; margin-bottom: 2rem; margin-top: 0; }
+    .tabs.is-fullwidth ul { display: flex; width: 100%; background: none; box-shadow: none; border-radius: 0; }
+    .tabs.is-fullwidth ul li { flex: 1 1 0; text-align: center; border-radius: 0; margin: 0 0.5em; }
+    .tabs.is-fullwidth ul li a { width: 100%; display: block; padding: 0.7em 0; font-size: 1.08em; font-weight: 500; color: #2176d2; background: none; border-radius: 0; border-bottom: 2.5px solid transparent; transition: border-bottom 0.2s, color 0.2s; }
+    .tabs.is-fullwidth ul li.is-active a { font-weight: 700; color: #2176d2; border-bottom: 2.5px solid #2176d2; background: none; }
+    .tabs.is-fullwidth ul li:not(.is-active):hover a { color: #3273dc; border-bottom: 2.5px solid #e3f0ff; background: none; }
+    .box, .card, .modal-content { border-radius: 12px; box-shadow: 0 2px 8px rgba(50,115,220,0.07); background: #fff; padding: 1.1em 1.2em; margin-bottom: 1.2rem; }
+    .title, .subtitle { text-align: left; margin-bottom: 1.1rem; font-family: inherit; font-weight: 700; letter-spacing: 0.5px; color: #2176d2; }
+    .table-responsive { overflow-x: auto; }
+    .table { width: 100%; table-layout: fixed; font-size: 0.98em; }
+    .table th, .table td { padding: 0.5em 0.3em; word-break: break-word; }
+    .table th, .table td { min-width: 70px; }
+    @media (max-width: 600px) {
+      .container { max-width: 100vw; padding: 0 2vw; }
+      .box, .card, .modal-content { padding: 0.7rem !important; margin-bottom: 1rem; border-radius: 10px; }
+      .title, .subtitle { font-size: 1.1em; margin-bottom: 0.7rem; }
+      .tabs { font-size: 1em; margin-bottom: 1rem; }
+      .tabs.is-fullwidth ul { border-radius: 0; }
+      .tabs.is-fullwidth ul li a { font-size: 1em; padding: 0.6em 0; border-radius: 0; }
+      .table th:nth-child(5), .table td:nth-child(5), .table th:nth-child(6), .table td:nth-child(6) { display: none; }
+      .table th, .table td { font-size: 0.95em; min-width: 60px; }
+    }
+  </style>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <section class="section">
+      <div class="container">
+        <div class="tabs is-toggle is-fullwidth is-large mb-4">
+          <ul>
+            <li class="is-active" id="tab-catalog"><a href="#" onclick="showTab('catalog')">Hàng hóa</a></li>
+            <li id="tab-sales"><a href="#" onclick="showTab('sales')">Bán hàng</a></li>
+            <li id="tab-report"><a href="#" onclick="showTab('report')">Báo cáo</a></li>
+            <li id="tab-recycle"><a href="#" onclick="showTab('recycle')">Khôi phục/Xuất nhập</a></li>
+          </ul>
+        </div>
+        <div id="view-catalog" class="fade-in"></div>
+        <div id="view-sales" class="is-hidden fade-in"></div>
+        <div id="view-report" class="is-hidden fade-in"></div>
+        <div id="view-recycle" class="is-hidden fade-in"></div>
+      </div>
+    </section>
+    <style>
+      body { background: #f8f8ff; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; }
+      .container { max-width: 900px; margin: 0 auto; padding: 0 1.2em; }
+      .section { padding: 1.5rem 0 0.5rem 0; }
+      .tabs.is-fullwidth { background: #fff; border-bottom: 1.5px solid #e3e3e3; box-shadow: none; border-radius: 0; margin-bottom: 2rem; margin-top: 0; }
+      .tabs.is-fullwidth ul { display: flex; width: 100%; background: none; box-shadow: none; border-radius: 0; }
+      .tabs.is-fullwidth ul li { flex: 1 1 0; text-align: center; border-radius: 0; margin: 0 0.5em; }
+      .tabs.is-fullwidth ul li a { width: 100%; display: block; padding: 0.7em 0; font-size: 1.08em; font-weight: 500; color: #2176d2; background: none; border-radius: 0; border-bottom: 2.5px solid transparent; transition: border-bottom 0.2s, color 0.2s; }
+      .tabs.is-fullwidth ul li.is-active a { font-weight: 700; color: #2176d2; border-bottom: 2.5px solid #2176d2; background: none; }
+      .tabs.is-fullwidth ul li:not(.is-active):hover a { color: #3273dc; border-bottom: 2.5px solid #e3f0ff; background: none; }
+      .box, .card, .modal-content { border-radius: 12px; box-shadow: 0 2px 8px rgba(50,115,220,0.07); background: #fff; padding: 1.1em 1.2em; margin-bottom: 1.2rem; }
+      .title, .subtitle { text-align: left; margin-bottom: 1.1rem; font-family: inherit; font-weight: 700; letter-spacing: 0.5px; color: #2176d2; }
+      .table-responsive { overflow-x: auto; }
+      .table { width: 100%; table-layout: fixed; font-size: 0.98em; }
+      .table th, .table td { padding: 0.5em 0.3em; word-break: break-word; }
+      .table th, .table td { min-width: 70px; }
+      @media (max-width: 600px) {
+        .container { max-width: 100vw; padding: 0 2vw; }
+        .box, .card, .modal-content { padding: 0.7rem !important; margin-bottom: 1rem; border-radius: 10px; }
+        .title, .subtitle { font-size: 1.1em; margin-bottom: 0.7rem; }
+        .tabs { font-size: 1em; margin-bottom: 1rem; }
+        .tabs.is-fullwidth ul { border-radius: 0; }
+        .tabs.is-fullwidth ul li a { font-size: 1em; padding: 0.6em 0; border-radius: 0; }
+        .table th:nth-child(5), .table td:nth-child(5), .table th:nth-child(6), .table td:nth-child(6) { display: none; }
+        .table th, .table td { font-size: 0.95em; min-width: 60px; }
+      }
+    </style>
+  <script>
+    // Tab navigation
+    function showTab(tab) {
+      ['catalog','sales','report','recycle'].forEach(t => {
+        document.getElementById('view-' + t).classList.add('is-hidden');
+        document.getElementById('tab-' + t).classList.remove('is-active');
+      });
+      document.getElementById('view-' + tab).classList.remove('is-hidden');
+      document.getElementById('tab-' + tab).classList.add('is-active');
+    }
+    // Quản lý hàng hóa
+    function renderCatalog() {
+      const products = JSON.parse(localStorage.getItem('products') || '[]');
+      let html = `<h3 class='title is-5'>Quản lý Hàng hóa</h3>
+      <form id='product-form' class='box' autocomplete='off'>
+        <div class='field'><label class='label'>Tên sản phẩm</label><div class='control'><input class='input' name='name' required></div></div>
+        <div class='field'><label class='label'>Mã vạch/ID</label>
+          <div class='field has-addons'>
+            <div class='control is-expanded'><input class='input' name='barcode' required></div>
+            <div class='control'><button type='button' class='button is-small barcode-btn' onclick='scanBarcode()'><span class='barcode-icon'>📷</span>Quét mã vạch</button></div>
+          </div>
+        </div>
+        <div class='field'><label class='label'>Giá bán</label><div class='control'><input class='input' name='price' type='number' required></div></div>
+        <div class='field'><label class='label'>Giá vốn</label><div class='control'><input class='input' name='cost' type='number'></div></div>
+        <div class='field'><label class='label'>Tồn kho</label><div class='control'><input class='input' name='stock' type='number'></div></div>
+        <div class='field'><label class='label'>Nhóm hàng</label><div class='control'><input class='input' name='category'></div></div>
+        <div class='field'><label class='label'>Ngày nhập</label><div class='control'><input class='input' name='importDate' type='date'></div></div>
+        <div class='field'><label class='label'>Người cung cấp</label><div class='control'><input class='input' name='supplier'></div></div>
+        <div class='field'><button class='button is-primary' type='submit'>Thêm sản phẩm</button></div>
+      </form>`;
+      html += `<div id='low-stock-warning'></div>`;
+      html += `<div class='mt-4'><h4 class='subtitle is-6'>Danh sách sản phẩm</h4>`;
+      if (products.length === 0) html += `<div class='has-text-grey'>Chưa có sản phẩm nào.</div>`;
+      html += `<div class='columns is-multiline'>`;
+      products.forEach(p => {
+        html += `<div class='column is-half-mobile is-one-third-tablet is-one-quarter-desktop'>
+          <div class='card product-card'>
+            <div class='card-content'>
+              <div class='is-flex is-align-items-center mb-2'>
+                <span class='icon is-large has-text-link' style='font-size:1.7em;margin-right:0.5em;'>📦</span>
+                <strong>${p.name}</strong> <span class='tag is-light ml-2'>${p.barcode}</span>
+              </div>
+              <div>Giá bán: <strong>${p.price}</strong> | Giá vốn: ${p.cost||'-'} | Tồn kho: <span${p.stock==0?" class='out-stock'":p.stock<=3?" class='low-stock'":''}>${p.stock}</span></div>
+              <div>Nhóm: ${p.category||'-'} | Ngày nhập: ${p.importDate||'-'} | NCC: ${p.supplier||'Vãng lai'}</div>
+              <div class='buttons mt-2'><button class='button is-small' onclick='editProduct(${p.id})'>Sửa</button><button class='button is-small is-danger' onclick='deleteProduct(${p.id})'>Xóa</button></div>
+            </div>
+          </div>
+        </div>`;
+      });
+      html += `</div></div>`;
+      document.getElementById('view-catalog').innerHTML = html;
+      renderLowStock(products);
+    }
+    function renderLowStock(products) {
+      const lows = products.filter(p => p.stock <= 3);
+      let html = '';
+      if (lows.length > 0) {
+        html += `<div class='notification is-warning is-light'><strong>Cảnh báo sắp hết hàng:</strong> `;
+        lows.forEach(p => {
+          html += `<div>${p.name} (còn ${p.stock}) <span class='has-text-grey'>- nhập: ${p.importDate||'-'}</span></div>`;
+        });
+        html += `</div>`;
+      }
+      document.getElementById('low-stock-warning').innerHTML = html;
+    }
+    let editingProductId = null;
+    function editProduct(id) {
+      const products = JSON.parse(localStorage.getItem('products') || '[]');
+      const prod = products.find(p => p.id === id);
+      if (!prod) return;
+      editingProductId = id;
+      document.getElementById('product-form').name.value = prod.name;
+      document.getElementById('product-form').barcode.value = prod.barcode;
+      document.getElementById('product-form').price.value = prod.price;
+      document.getElementById('product-form').cost.value = prod.cost;
+      document.getElementById('product-form').stock.value = prod.stock;
+      document.getElementById('product-form').category.value = prod.category;
+      document.getElementById('product-form').importDate.value = prod.importDate;
+      document.getElementById('product-form').supplier.value = prod.supplier;
+      document.getElementById('product-form').querySelector('button[type="submit"]').textContent = 'Cập nhật';
+    }
+    document.addEventListener('submit', function(e) {
+      if (e.target && e.target.id === 'product-form') {
+        e.preventDefault();
+        const f = e.target;
+        let products = JSON.parse(localStorage.getItem('products') || '[]');
+        if (editingProductId) {
+          // cập nhật
+          products = products.map(p => p.id === editingProductId ? {
+            ...p,
+            name: f.name.value,
+            barcode: f.barcode.value,
+            price: +f.price.value,
+            cost: +f.cost.value||0,
+            stock: +f.stock.value||0,
+            category: f.category.value,
+            importDate: f.importDate.value||new Date().toISOString().slice(0,10),
+            supplier: f.supplier.value||'Vãng lai'
+          } : p);
+          editingProductId = null;
+          f.querySelector('button[type="submit"]').textContent = 'Thêm sản phẩm';
+        } else {
+          // thêm mới
+          const prod = {
+            id: Date.now(),
+            name: f.name.value,
+            barcode: f.barcode.value,
+            price: +f.price.value,
+            cost: +f.cost.value||0,
+            stock: +f.stock.value||0,
+            category: f.category.value,
+            importDate: f.importDate.value||new Date().toISOString().slice(0,10),
+            supplier: f.supplier.value||'Vãng lai'
+          };
+          products.push(prod);
+        }
+        localStorage.setItem('products', JSON.stringify(products));
+        renderCatalog();
+      }
+    });
+    function deleteProduct(id) {
+      if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
+        let products = JSON.parse(localStorage.getItem('products') || '[]');
+        let deletedProducts = JSON.parse(localStorage.getItem('deletedProducts') || '[]');
+        const prod = products.find(p => p.id === id);
+        if (prod) deletedProducts.push(prod);
+        products = products.filter(p => p.id !== id);
+        localStorage.setItem('products', JSON.stringify(products));
+        localStorage.setItem('deletedProducts', JSON.stringify(deletedProducts));
+        renderCatalog();
+      }
+    }
+    let barcodeScanner = null;
+    function scanBarcode() {
+      if (barcodeScanner) return;
+      const modal = document.createElement('div');
+      modal.innerHTML = `<div class='modal is-active'><div class='modal-background'></div><div class='modal-content'><div id='barcode-reader' style='width:300px;height:300px;margin:auto;'></div></div><button class='modal-close is-large'></button></div>`;
+      document.body.appendChild(modal);
+      barcodeScanner = new Html5Qrcode('barcode-reader');
+      barcodeScanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: 250 },
+        code => {
+          document.getElementById('product-form').barcode.value = code;
+          closeBarcodeModal();
+        }
+      );
+      modal.querySelector('.modal-close').onclick = closeBarcodeModal;
+    }
+    function closeBarcodeModal() {
+      if (barcodeScanner) barcodeScanner.stop();
+      barcodeScanner = null;
+      document.querySelector('.modal').remove();
+    }
+    // Bán hàng
+    function renderSales() {
+      const products = JSON.parse(localStorage.getItem('products') || '[]');
+      const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+      let cart = [];
+      let html = `<h3 class='title is-5'>Bán hàng / Tính tiền</h3>
+      <form id='sales-form' class='box'>
+        <div class='field'><label class='label'>Tìm kiếm/Mã vạch</label><div class='control'><input class='input' id='sales-search'></div></div>
+        <div class='field'><label class='label'>Tên người mua</label><div class='control'><input class='input' id='sales-buyer' placeholder='Vãng lai'></div></div>
+        <div class='field'><button class='button is-info' type='button' id='scan-barcode-sales'><span class='barcode-icon'>📷</span>Quét mã vạch</button></div>
+      </form>`;
+      html += `<div id='sales-products'></div>`;
+      html += `<h4 class='subtitle is-6'>Giỏ hàng</h4><div id='sales-cart'></div>`;
+      html += `<div id='sales-total'></div><button class='button is-success mt-2' id='sales-pay'>Thanh toán</button>`;
+      html += `<div id='sales-lastorder'></div>`;
+      document.getElementById('view-sales').innerHTML = html;
+      let search = '';
+      document.getElementById('sales-search').oninput = function(e) {
+        search = e.target.value.toLowerCase();
+        renderSalesProducts();
+      };
+      function renderSalesProducts() {
+        let filtered = products.filter(p => p.name.toLowerCase().includes(search) || p.barcode.includes(search));
+        let html = '';
+        filtered.forEach(p => {
+          html += `<div class='card mb-2'><div class='card-content'>
+            <div><strong>${p.name}</strong> <span class='tag is-light'>${p.barcode}</span></div>
+            <div>Giá bán: <strong>${p.price}</strong> | Tồn kho: <span${p.stock==0?" class='out-stock'":p.stock<=3?" class='low-stock'":''}>${p.stock}</span></div>
+            <button class='button is-small' onclick='addToCart(${p.id})'>Thêm vào giỏ</button>
+          </div></div>`;
+        });
+        document.getElementById('sales-products').innerHTML = html;
+      }
+      window.addToCart = function(id) {
+        const prod = products.find(p => p.id === id);
+        if (!prod || prod.stock <= 0) return alert('Không còn tồn kho!');
+        const found = cart.find(item => item.id === id);
+        if (found) found.qty++;
+        else cart.push({ ...prod, qty: 1 });
+        renderCart();
+      };
+      function renderCart() {
+        let html = '';
+        let total = 0;
+        cart.forEach(item => {
+          total += item.price * item.qty;
+          html += `<div>${item.name} x ${item.qty} = <strong>${(item.price*item.qty).toLocaleString()}</strong> <button class='button is-small' onclick='changeQty(${item.id},-1)'>-</button> <button class='button is-small' onclick='changeQty(${item.id},1)'>+</button></div>`;
+        });
+        document.getElementById('sales-cart').innerHTML = html;
+        document.getElementById('sales-total').innerHTML = `<strong>Tổng tiền: ${total.toLocaleString()} VND</strong>`;
+      }
+      window.changeQty = function(id, delta) {
+        const found = cart.find(item => item.id === id);
+        if (found) {
+          found.qty = Math.max(1, found.qty + delta);
+          renderCart();
+        }
+      };
+      document.getElementById('sales-pay').onclick = function() {
+        if (cart.length === 0) return alert('Giỏ hàng trống!');
+        // Trừ tồn kho
+        cart.forEach(item => {
+          const idx = products.findIndex(p => p.id === item.id);
+          if (idx >= 0) products[idx].stock = Math.max(0, products[idx].stock - item.qty);
+        });
+        localStorage.setItem('products', JSON.stringify(products));
+        // Lưu đơn hàng
+        const buyer = document.getElementById('sales-buyer').value.trim() || 'Vãng lai';
+        const order = {
+          id: 'DH' + Date.now(),
+          items: cart,
+          total: cart.reduce((sum, item) => sum + item.price * item.qty, 0),
+          buyer,
+          createdAt: new Date().toISOString()
+        };
+        orders.push(order);
+        localStorage.setItem('orders', JSON.stringify(orders));
+        document.getElementById('sales-lastorder').innerHTML = `<div class='notification is-success'>Đã thanh toán! Mã đơn: ${order.id}, Người mua: ${buyer}, Tổng: ${order.total.toLocaleString()} VND</div>`;
+        cart = [];
+        renderCart();
+        renderSalesProducts();
+      };
+      document.getElementById('scan-barcode-sales').onclick = function() {
+        if (barcodeScanner) return;
+        const modal = document.createElement('div');
+        modal.innerHTML = `<div class='modal is-active'><div class='modal-background'></div><div class='modal-content'><div id='barcode-reader-sales' style='width:300px;height:300px;margin:auto;'></div></div><button class='modal-close is-large'></button></div>`;
+        document.body.appendChild(modal);
+        barcodeScanner = new Html5Qrcode('barcode-reader-sales');
+        barcodeScanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: 250 },
+          code => {
+            document.getElementById('sales-search').value = code;
+            document.getElementById('sales-search').dispatchEvent(new Event('input'));
+            closeBarcodeModal();
+          }
+        );
+        modal.querySelector('.modal-close').onclick = closeBarcodeModal;
+      }
+    }
+    // Báo cáo
+    function renderReport() {
+      const products = JSON.parse(localStorage.getItem('products') || '[]');
+      const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+      const today = new Date().toISOString().slice(0,10);
+      const todayOrders = orders.filter(o => o.createdAt && o.createdAt.slice(0,10) === today);
+      const totalOrders = todayOrders.length;
+      const totalRevenue = todayOrders.reduce((sum, o) => sum + o.total, 0);
+      const totalProfit = todayOrders.reduce((sum, o) => sum + o.items.reduce((pSum, item) => {
+        const prod = products.find(p => p.id === item.id);
+        return pSum + (item.price - (prod?.cost || 0)) * item.qty;
+      }, 0), 0);
+      const lowStock = products.filter(p => p.stock <= 3);
+      const totalInventoryCost = products.reduce((sum, p) => sum + (p.cost || 0) * (p.stock || 0), 0);
+      const allRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+      let html = `<h2 class='title is-4 has-text-left mb-4'>Báo cáo ngày</h2>
+      <div class='box report-box mb-3'><span class='has-text-weight-semibold'>Tổng doanh thu toàn bộ:</span> <span class='has-text-black has-text-weight-bold'>${allRevenue.toLocaleString()} VND</span></div>`;
+      html += `<div class='box report-box mb-3'>
+        <div><span class='has-text-weight-semibold'>Tổng số đơn hàng hôm nay:</span> <span class='has-text-black'>${totalOrders}</span></div>
+        <div><span class='has-text-weight-semibold'>Tổng doanh thu hôm nay:</span> <span class='has-text-black'>${totalRevenue.toLocaleString()} VND</span></div>
+        <div><span class='has-text-weight-semibold'>Tổng lợi nhuận hôm nay:</span> <span class='has-text-black'>${totalProfit.toLocaleString()} VND</span></div>
+        ${lowStock.length > 0 ? `<div class='mt-2'><span class='has-text-danger has-text-weight-bold'>Cảnh báo sắp hết hàng:</span><ul class='mt-1'>${lowStock.map(p => `<li><span class='has-text-black'>${p.name} (còn ${p.stock})</span> <span class='has-text-grey'>- nhập: ${p.importDate||'-'}</span></li>`).join('')}</ul></div>` : ''}
+      </div>`;
+      html += `<h2 class='title is-4 has-text-left mb-3'>Báo cáo tồn kho</h2>`;
+      html += `<div class='box report-box mb-3'><span class='has-text-weight-semibold'>Tổng giá vốn hàng tồn kho:</span> <span class='has-text-black has-text-weight-bold'>${totalInventoryCost.toLocaleString()} VND</span></div>`;
+      html += `<div class='box table-responsive mb-4'><table class='table is-fullwidth is-size-7'>
+        <thead style='background:#e3f0ff;'>
+          <tr><th class='has-text-weight-bold'>Tên hàng</th><th class='has-text-weight-bold'>Tồn kho</th><th class='has-text-weight-bold'>Giá vốn</th><th class='has-text-weight-bold'>Thành tiền</th><th class='has-text-weight-bold'>Ngày nhập</th><th class='has-text-weight-bold'>Người cung cấp</th></tr>
+        </thead><tbody>`;
+      products.forEach(p => {
+        html += `<tr><td>${p.name}</td><td>${p.stock}</td><td>${p.cost?.toLocaleString()||0} VND</td><td>${((p.cost||0)*(p.stock||0)).toLocaleString()} VND</td><td>${p.importDate||'-'}</td><td>${p.supplier||'Vãng lai'}</td></tr>`;
+      });
+      html += `</tbody></table></div>`;
+      document.getElementById('view-report').innerHTML = html;
+    }
+    // Xuất báo cáo Excel
+    function exportReportExcel() {
+      if (typeof XLSX === 'undefined') {
+        alert('SheetJS chưa được tải.');
+        return;
+      }
+      const products = JSON.parse(localStorage.getItem('products') || '[]');
+      const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+      const lowStock = products.filter(p => p.stock <= 3);
+      const wb = XLSX.utils.book_new();
+      wb.SheetNames.push('Báo cáo tồn kho');
+      wb.Sheets['Báo cáo tồn kho'] = XLSX.utils.json_to_sheet(products);
+      wb.SheetNames.push('Đơn hàng');
+      wb.Sheets['Đơn hàng'] = XLSX.utils.json_to_sheet(orders);
+      wb.SheetNames.push('Hàng sắp hết');
+      wb.Sheets['Hàng sắp hết'] = XLSX.utils.json_to_sheet(lowStock);
+      const wbout = XLSX.write(wb, {bookType:'xlsx', type:'binary'});
+      const buf = new ArrayBuffer(wbout.length);
+      const view = new Uint8Array(buf);
+      for (let i=0; i<wbout.length; ++i) view[i] = wbout.charCodeAt(i) & 0xFF;
+      const blob = new Blob([buf], {type:'application/octet-stream'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'baocao.xlsx';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    // Backup dữ liệu JSON
+    function backupData() {
+      const data = {
+        products: JSON.parse(localStorage.getItem('products') || '[]'),
+        orders: JSON.parse(localStorage.getItem('orders') || '[]'),
+        deletedProducts: JSON.parse(localStorage.getItem('deletedProducts') || '[]'),
+        deletedOrders: JSON.parse(localStorage.getItem('deletedOrders') || '[]'),
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'backup_data.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    // Khôi phục/Xuất nhập
+    function renderRecycle() {
+      const deletedProducts = JSON.parse(localStorage.getItem('deletedProducts') || '[]');
+      const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+      let html = `<h3 class='title is-5'>Khôi phục/Xuất nhập hàng hóa</h3>
+      <div class='tabs is-toggle'>
+        <ul>
+          <li class='is-active' id='tab-recycle-products'><a href='#' onclick='showRecycleTab("products")'>Sản phẩm đã xóa</a></li>
+          <li id='tab-recycle-orders'><a href='#' onclick='showRecycleTab("orders")'>Đơn hàng đã xóa</a></li>
+        </ul>
+      </div>
+      <div id='recycle-products' class='box'></div>
+      <div id='recycle-orders' class='box is-hidden'></div>`;
+      document.getElementById('view-recycle').innerHTML = html;
+      renderRecycleProducts(deletedProducts);
+      renderRecycleOrders(orders.filter(o => o.id.startsWith('DH')));
+    }
+    function showRecycleTab(tab) {
+      ['products','orders'].forEach(t => {
+        document.getElementById('recycle-' + t).classList.add('is-hidden');
+        document.getElementById('tab-recycle-' + t).classList.remove('is-active');
+      });
+      document.getElementById('recycle-' + tab).classList.remove('is-hidden');
+      document.getElementById('tab-recycle-' + tab).classList.add('is-active');
+    }
+    function renderRecycleProducts(products) {
+      let html = `<h4 class='subtitle is-6'>Sản phẩm đã xóa</h4>`;
+      if (products.length === 0) html += `<div class='has-text-grey'>Chưa có sản phẩm nào bị xóa.</div>`;
+      products.sort((a,b) => (b.importDate||'').localeCompare(a.importDate||''));
+      products.forEach(p => {
+        html += `<div class='card'><div class='card-content'>
+          <div><strong>${p.name}</strong> <span class='tag is-light'>${p.barcode}</span></div>
+          <div>Giá bán: <strong>${p.price}</strong> | Giá vốn: ${p.cost||'-'} | Tồn kho: <span${p.stock==0?" class='out-stock'":p.stock<=3?" class='low-stock'":''}>${p.stock}</span></div>
+          <div>Nhóm: ${p.category||'-'} | Ngày nhập: ${p.importDate||'-'} | NCC: ${p.supplier||'Vãng lai'}</div>
+          <div class='buttons mt-2'><button class='button is-small' onclick='restoreProduct(${p.id})'>Khôi phục</button></div>
+        </div></div>`;
+      });
+      document.getElementById('recycle-products').innerHTML = html;
+    }
+    function renderRecycleOrders(orders) {
+      let html = `<h4 class='subtitle is-6'>Đơn hàng đã xóa</h4>`;
+      if (orders.length === 0) html += `<div class='has-text-grey'>Chưa có đơn hàng nào bị xóa.</div>`;
+      orders.sort((a,b) => (b.createdAt||'').localeCompare(a.createdAt||''));
+      orders.forEach(order => {
+        html += `<div class='card'><div class='card-content'>
+          <div><strong>Mã đơn: ${order.id}</strong></div>
+          <div>Ngày bán: ${order.createdAt.slice(0,10)} | Người mua: ${order.buyer||'Vãng lai'}</div>
+          <div>Sản phẩm: <ul>`;
+        order.items.forEach(item => {
+          html += `<li>${item.name} x ${item.qty}</li>`;
+        });
+        html += `</ul></div>
+          <div class='buttons mt-2'><button class='button is-small' onclick='restoreOrder("${order.id}")'>Khôi phục</button></div>
+        </div></div>`;
+      });
+      document.getElementById('recycle-orders').innerHTML = html;
+    }
+    window.restoreProduct = function(id) {
+      let products = JSON.parse(localStorage.getItem('products') || '[]');
+      let deletedProducts = JSON.parse(localStorage.getItem('deletedProducts') || '[]');
+      const prod = deletedProducts.find(p => p.id === id);
+      if (prod) {
+        products.push(prod);
+        deletedProducts = deletedProducts.filter(p => p.id !== id);
+        localStorage.setItem('products', JSON.stringify(products));
+        localStorage.setItem('deletedProducts', JSON.stringify(deletedProducts));
+        renderRecycle();
+        renderCatalog();
+      }
+    }
+    window.restoreOrder = function(orderId) {
+      let orders = JSON.parse(localStorage.getItem('orders') || '[]');
+      let deletedOrders = JSON.parse(localStorage.getItem('deletedOrders') || '[]');
+      const order = deletedOrders.find(o => o.id === orderId);
+      if (order) {
+        orders.push(order);
+        deletedOrders = deletedOrders.filter(o => o.id !== orderId);
+        localStorage.setItem('orders', JSON.stringify(orders));
+        localStorage.setItem('deletedOrders', JSON.stringify(deletedOrders));
+        renderRecycle();
+        renderReport();
+      }
+    }
+    // Khởi tạo
+    document.addEventListener('DOMContentLoaded', function() {
+      renderCatalog();
+      document.getElementById('tab-catalog').addEventListener('click', renderCatalog);
+      document.getElementById('tab-sales').addEventListener('click', renderSales);
+      document.getElementById('tab-report').addEventListener('click', renderReport);
+      document.getElementById('tab-recycle').addEventListener('click', renderRecycle);
+    });
+  </script>
+</body>
+</html>
