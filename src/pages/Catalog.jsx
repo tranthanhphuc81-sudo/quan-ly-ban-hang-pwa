@@ -4,7 +4,7 @@ import ProductContext from '../ProductContext';
 
 function Catalog() {
   const { products, setProducts } = useContext(ProductContext);
-  const [form, setForm] = useState({ name: '', barcode: '', price: '', cost: '', stock: '', category: '', importDate: '', supplier: '' });
+  const [form, setForm] = useState({ name: '', barcode: '', price: '', cost: '', stock: '', category: '', importDate: '', supplier: '', paidAmount: '' });
   const [editingId, setEditingId] = useState(null);
 
 
@@ -41,18 +41,60 @@ function Catalog() {
       return;
     }
     const supplier = form.supplier && form.supplier.trim() ? form.supplier : 'Vãng lai';
+    const now = new Date();
+    const importTime = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    
+    // Tính toán tổng giá trị nhập và công nợ
+    const totalCost = (+form.cost || 0) * (+form.stock || 0);
+    const paidAmount = +form.paidAmount || 0;
+    const debtAmount = totalCost - paidAmount;
+    
     if (editingId) {
-      setProducts(products.map(p => p.id === editingId ? { ...p, ...form, supplier, price: +form.price, cost: +form.cost || 0, stock: +form.stock || 0, category: form.category, importDate: form.importDate || new Date().toISOString().slice(0, 10) } : p));
+      setProducts(products.map(p => p.id === editingId ? { ...p, ...form, supplier, price: +form.price, cost: +form.cost || 0, stock: +form.stock || 0, category: form.category, importDate: form.importDate || now.toISOString().slice(0, 10), importTime } : p));
     } else {
-      const importDate = form.importDate || new Date().toISOString().slice(0, 10);
-      setProducts([...products, { id: Date.now(), ...form, supplier, price: +form.price, cost: +form.cost || 0, stock: +form.stock || 0, category: form.category, importDate }]);
+      const importDate = form.importDate || now.toISOString().slice(0, 10);
+      
+      // Lưu thông tin nhập hàng vào localStorage để theo dõi công nợ
+      if (totalCost > 0 && supplier !== 'Vãng lai') {
+        const imports = JSON.parse(localStorage.getItem('imports') || '[]');
+        imports.push({
+          id: Date.now(),
+          supplier,
+          productName: form.name,
+          quantity: +form.stock || 0,
+          totalCost,
+          paidAmount,
+          debtAmount,
+          importDate,
+          importTime,
+          paid: debtAmount === 0
+        });
+        localStorage.setItem('imports', JSON.stringify(imports));
+      }
+      
+      // Tìm sản phẩm trùng
+      const existed = products.find(p =>
+        p.name === form.name &&
+        +p.price === +form.price &&
+        p.importDate === importDate
+      );
+      if (existed) {
+        // Cộng dồn tồn kho
+        setProducts(products.map(p =>
+          p.id === existed.id
+            ? { ...p, stock: (+p.stock || 0) + (+form.stock || 0) }
+            : p
+        ));
+      } else {
+        setProducts([...products, { id: Date.now(), ...form, supplier, price: +form.price, cost: +form.cost || 0, stock: +form.stock || 0, category: form.category, importDate, importTime }]);
+      }
     }
-    setForm({ name: '', barcode: '', price: '', cost: '', stock: '', category: '', importDate: '', supplier: '' });
+    setForm({ name: '', barcode: '', price: '', cost: '', stock: '', category: '', importDate: '', supplier: '', paidAmount: '' });
     setEditingId(null);
   };
 
   const handleEdit = p => {
-    setForm({ name: p.name, barcode: p.barcode, price: p.price, cost: p.cost, stock: p.stock, category: p.category || '', importDate: p.importDate || '', supplier: p.supplier || '' });
+    setForm({ name: p.name, barcode: p.barcode, price: p.price, cost: p.cost, stock: p.stock, category: p.category || '', importDate: p.importDate || '', supplier: p.supplier || '', paidAmount: '' });
     setEditingId(p.id);
   };
 
@@ -92,9 +134,39 @@ function Catalog() {
       <h2>Quản lý Hàng hóa</h2>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <input name="name" value={form.name} onChange={handleChange} placeholder="Tên sản phẩm" required />
-        <div style={{ display: 'flex', gap: 8 }}>
-          <input name="barcode" value={form.barcode} onChange={handleChange} placeholder="Mã vạch" required style={{ flex: 1 }} />
-          <button type="button" onClick={handleScanBarcode}>Quét mã vạch</button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'stretch', marginBottom: 8 }}>
+          <input 
+            name="barcode" 
+            value={form.barcode} 
+            onChange={handleChange} 
+            placeholder="Mã vạch" 
+            required 
+            style={{ flex: 1, marginBottom: 0 }} 
+          />
+          <button 
+            type="button" 
+            onClick={handleScanBarcode}
+            style={{ 
+              whiteSpace: 'nowrap',
+              padding: '13px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              fontSize: '15px',
+              marginTop: 0,
+              marginBottom: 0,
+              height: 'auto'
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="7" height="7"/>
+              <rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/>
+            </svg>
+            <span>Quét</span>
+          </button>
         </div>
         <div id="qr-reader" style={{ width: 250, margin: '8px auto', display: 'none' }}></div>
         <input name="price" value={form.price} onChange={handleChange} placeholder="Giá bán" type="number" required />
@@ -134,6 +206,15 @@ function Catalog() {
           placeholder="dd/mm/yyyy" type="text" style={{paddingLeft:10}} />
         </div>
         <input name="supplier" value={form.supplier} onChange={handleChange} placeholder="Người cung cấp (mặc định: Vãng lai)" />
+        <input name="paidAmount" value={form.paidAmount} onChange={handleChange} placeholder="Đã thanh toán (tùy chọn)" type="number" />
+        {form.cost && form.stock && (
+          <div style={{background: '#f0f9ff', padding: '8px 12px', borderRadius: 8, fontSize: '0.95em', color: '#0369a1', border: '1px solid #bae6fd'}}>
+            <div>Tổng giá trị: <strong>{((+form.cost || 0) * (+form.stock || 0)).toLocaleString()}đ</strong></div>
+            {form.paidAmount && (
+              <div>Còn nợ: <strong>{((+form.cost || 0) * (+form.stock || 0) - (+form.paidAmount || 0)).toLocaleString()}đ</strong></div>
+            )}
+          </div>
+        )}
         <button type="submit">{editingId ? 'Cập nhật' : 'Thêm sản phẩm'}</button>
       </form>
       <div style={{ margin: '18px 0 10px 0', display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -194,7 +275,10 @@ function Catalog() {
                 <span style={{ color: 'orange', fontWeight: 'bold', marginLeft: 8 }}>Sắp hết hàng!</span>
               )}
             </div>
-            <div style={{ color: '#555', fontSize: 13 }}>Ngày nhập: <span style={{ fontWeight: 500 }}>{p.importDate || '-'}</span></div>
+            <div style={{ color: '#555', fontSize: 13 }}>
+              Ngày nhập: <span style={{ fontWeight: 500 }}>{p.importDate || '-'}</span>
+              {p.importTime && <span style={{ marginLeft: 8, color: '#888' }}>({p.importTime})</span>}
+            </div>
             <div style={{ color: '#555', fontSize: 13 }}>Người cung cấp: <span style={{ fontWeight: 500 }}>{p.supplier || 'Vãng lai'}</span></div>
             <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
               <button style={{ flex: 1, padding: '6px 0', fontSize: 15 }} onClick={() => handleEdit(p)}>Sửa</button>
@@ -214,9 +298,41 @@ function Catalog() {
         ))}
       </div>
       <button
-        style={{ position: 'fixed', right: 16, bottom: 24, zIndex: 10, background: '#eee', borderRadius: 24, padding: '8px 18px', fontSize: 18, border: 'none', boxShadow: '0 2px 8px #ccc' }}
+        style={{ 
+          position: 'fixed', 
+          right: 20, 
+          bottom: 20, 
+          zIndex: 998,
+          width: '56px',
+          height: '56px',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          borderRadius: '50%',
+          border: 'none',
+          boxShadow: '0 4px 16px rgba(102, 126, 234, 0.4)',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '24px',
+          fontWeight: 'bold',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.transform = 'translateY(-4px) scale(1.05)';
+          e.target.style.boxShadow = '0 8px 24px rgba(102, 126, 234, 0.5)';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.transform = 'translateY(0) scale(1)';
+          e.target.style.boxShadow = '0 4px 16px rgba(102, 126, 234, 0.4)';
+        }}
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-      >↑ Lên đầu</button>
+        aria-label="Lên đầu trang"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 15l-6-6-6 6"/>
+        </svg>
+      </button>
     </div>
   );
 }

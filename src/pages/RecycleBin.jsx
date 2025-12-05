@@ -3,6 +3,10 @@ import { exportLocalStorage } from '../utils/exportData';
 import { exportToExcel, importFromExcel } from '../utils/excelData';
 
 function RecycleBin() {
+    // Ref cho các input file
+    const jsonInputRef = React.useRef();
+    const excelProductInputRef = React.useRef();
+    const excelOrderInputRef = React.useRef();
   const [deletedProducts, setDeletedProducts] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('deletedProducts') || '[]');
@@ -22,10 +26,28 @@ function RecycleBin() {
     const prod = deletedProducts.find(p => p.id === id);
     if (prod) {
       const products = JSON.parse(localStorage.getItem('products') || '[]');
-      localStorage.setItem('products', JSON.stringify([...products, prod]));
+      // Tìm sản phẩm trùng
+      const existed = products.find(p =>
+        p.name === prod.name &&
+        +p.price === +prod.price &&
+        p.importDate === prod.importDate
+      );
+      let newProducts;
+      if (existed) {
+        // Cộng dồn tồn kho
+        newProducts = products.map(p =>
+          p.id === existed.id
+            ? { ...p, stock: (+p.stock || 0) + (+prod.stock || 0) }
+            : p
+        );
+      } else {
+        newProducts = [...products, prod];
+      }
+      localStorage.setItem('products', JSON.stringify(newProducts));
       const updated = deletedProducts.filter(p => p.id !== id);
       localStorage.setItem('deletedProducts', JSON.stringify(updated));
       setDeletedProducts(updated);
+      window.location.reload();
     }
   };
   const deleteProductForever = (id) => {
@@ -38,13 +60,25 @@ function RecycleBin() {
 
   const restoreOrder = (id) => {
     const order = deletedOrders.find(o => o.id === id);
-    if (order) {
-      const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-      localStorage.setItem('orders', JSON.stringify([...orders, order]));
-      const updated = deletedOrders.filter(o => o.id !== id);
-      localStorage.setItem('deletedOrders', JSON.stringify(updated));
-      setDeletedOrders(updated);
-    }
+    if (!order) return;
+    
+    // Trừ lại số lượng sản phẩm trong kho khi khôi phục đơn hàng
+    const currentProducts = JSON.parse(localStorage.getItem('products') || '[]');
+    order.items.forEach(item => {
+      const productIndex = currentProducts.findIndex(p => p.id === item.id);
+      if (productIndex !== -1) {
+        currentProducts[productIndex].stock = Math.max(0, currentProducts[productIndex].stock - item.qty);
+      }
+    });
+    localStorage.setItem('products', JSON.stringify(currentProducts));
+    
+    const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+    localStorage.setItem('orders', JSON.stringify([...orders, order]));
+    const updated = deletedOrders.filter(o => String(o.id) !== String(id));
+    localStorage.setItem('deletedOrders', JSON.stringify(updated));
+    setDeletedOrders(updated);
+    
+    setTimeout(() => window.location.reload(), 100);
   };
   const deleteOrderForever = (id) => {
     if (window.confirm('Xoá vĩnh viễn đơn hàng này?')) {
@@ -69,11 +103,12 @@ function RecycleBin() {
         <div style={{ flex: 1 }}>
           <h4>Nhập dữ liệu</h4>
           <label style={{ display: 'block', marginBottom: 8 }}>
-            <button type="button" style={{ width: '100%' }}>Nhập file dữ liệu (JSON)</button>
+            <button type="button" style={{ width: '100%' }} onClick={() => jsonInputRef.current && jsonInputRef.current.click()}>Nhập file dữ liệu (JSON)</button>
             <input
               type="file"
               accept="application/json"
               style={{ display: 'none' }}
+              ref={jsonInputRef}
               onChange={e => {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -85,7 +120,8 @@ function RecycleBin() {
                     if (data.orders) localStorage.setItem('orders', JSON.stringify(data.orders));
                     if (data.deletedProducts) localStorage.setItem('deletedProducts', JSON.stringify(data.deletedProducts));
                     if (data.deletedOrders) localStorage.setItem('deletedOrders', JSON.stringify(data.deletedOrders));
-                    alert('Khôi phục dữ liệu thành công! Vui lòng tải lại trang.');
+                    alert('Khôi phục dữ liệu thành công!');
+                    window.location.reload();
                   } catch {
                     alert('File không hợp lệ!');
                   }
@@ -95,33 +131,37 @@ function RecycleBin() {
             />
           </label>
           <label style={{ display: 'block', marginBottom: 8 }}>
-            <button type="button" style={{ width: '100%' }}>Nhập Excel sản phẩm</button>
+            <button type="button" style={{ width: '100%' }} onClick={() => excelProductInputRef.current && excelProductInputRef.current.click()}>Nhập Excel sản phẩm</button>
             <input
               type="file"
               accept=".xlsx,.xls"
               style={{ display: 'none' }}
+              ref={excelProductInputRef}
               onChange={e => {
                 const file = e.target.files[0];
                 if (!file) return;
                 importFromExcel(file, json => {
                   localStorage.setItem('products', JSON.stringify(json));
-                  alert('Nhập Excel sản phẩm thành công! Vui lòng tải lại trang.');
+                  alert('Nhập Excel sản phẩm thành công!');
+                  window.location.reload();
                 });
               }}
             />
           </label>
           <label style={{ display: 'block', marginBottom: 8 }}>
-            <button type="button" style={{ width: '100%' }}>Nhập Excel đơn hàng</button>
+            <button type="button" style={{ width: '100%' }} onClick={() => excelOrderInputRef.current && excelOrderInputRef.current.click()}>Nhập Excel đơn hàng</button>
             <input
               type="file"
               accept=".xlsx,.xls"
               style={{ display: 'none' }}
+              ref={excelOrderInputRef}
               onChange={e => {
                 const file = e.target.files[0];
                 if (!file) return;
                 importFromExcel(file, json => {
                   localStorage.setItem('orders', JSON.stringify(json));
-                  alert('Nhập Excel đơn hàng thành công! Vui lòng tải lại trang.');
+                  alert('Nhập Excel đơn hàng thành công!');
+                  window.location.reload();
                 });
               }}
             />

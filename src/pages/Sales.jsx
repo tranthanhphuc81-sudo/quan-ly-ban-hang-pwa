@@ -4,6 +4,11 @@ import ProductContext from '../ProductContext';
 import OrderContext from '../OrderContext';
 
 function Sales() {
+        const cashInputRef = React.useRef();
+        const bankInputRef = React.useRef();
+      const [cashPaid, setCashPaid] = useState(0);
+      const [bankPaid, setBankPaid] = useState(0);
+    const [unpaid, setUnpaid] = useState(false);
   const { products, setProducts } = useContext(ProductContext);
   const { orders, setOrders } = useContext(OrderContext);
   const [query, setQuery] = useState('');
@@ -63,6 +68,16 @@ function Sales() {
       alert('Giỏ hàng trống!');
       return;
     }
+    
+    const buyerName = buyer.trim() === '' ? 'Vãng lai' : buyer.trim();
+    const debt = Math.max(0, total - cashPaid - bankPaid);
+    
+    // Kiểm tra: Khách vãng lai không được thiếu
+    if (buyerName === 'Vãng lai' && debt > 0) {
+      alert('Khách vãng lai không được mua thiếu! Vui lòng thanh toán đủ hoặc nhập tên người mua.');
+      return;
+    }
+    
     // Trừ tồn kho theo từng lô
     const updatedProducts = products.map(p => {
       const cartItem = cart.find(item => item.id === p.id);
@@ -77,19 +92,25 @@ function Sales() {
     const todayOrders = orders.filter(o => o.createdAt && o.createdAt.slice(0, 10) === new Date().toISOString().slice(0, 10));
     const orderSeq = (todayOrders.length + 1).toString().padStart(3, '0');
     const orderId = `${todayStr}-${orderSeq}`;
-    const buyerName = buyer.trim() === '' ? 'Vãng lai' : buyer.trim();
+    const now = new Date();
     const newOrder = {
       id: orderId,
       items: cart,
       total,
-      payMethod,
       buyer: buyerName,
-      createdAt: new Date().toISOString(),
+      createdAt: now.toISOString(),
+      createdTime: now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      cashPaid,
+      bankPaid,
+      paid: debt === 0,
+      debt,
     };
     setOrders([...orders, newOrder]);
     setLastOrder(newOrder);
     setCart([]);
     setBuyer('');
+    setCashPaid(0);
+    setBankPaid(0);
   };
 
   // Hiển thị từng lô nhập khi tìm kiếm
@@ -113,14 +134,38 @@ function Sales() {
           </ul>
         </div>
       )}
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'stretch', marginBottom: 8 }}>
         <input
           value={query}
           onChange={e => setQuery(e.target.value)}
           placeholder="Tìm kiếm hoặc quét mã vạch"
-          style={{ width: '100%', fontSize: 18, marginBottom: 8 }}
+          style={{ flex: 1, fontSize: 16, marginBottom: 0 }}
         />
-        <button type="button" onClick={handleScanBarcode} disabled={scanning}>Quét mã vạch</button>
+        <button 
+          type="button" 
+          onClick={handleScanBarcode} 
+          disabled={scanning}
+          style={{ 
+            whiteSpace: 'nowrap',
+            padding: '13px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            fontSize: '15px',
+            marginTop: 0,
+            marginBottom: 0,
+            height: 'auto'
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+          </svg>
+          <span>Quét</span>
+        </button>
       </div>
       <div style={{ marginBottom: 8 }}>
         <input
@@ -165,21 +210,76 @@ function Sales() {
       <div style={{ marginTop: 16 }}>
         <strong>Tổng tiền: {total.toLocaleString()} VND</strong>
       </div>
-      <div style={{ margin: '8px 0' }}>
-        <label>
-          <input type="radio" checked={payMethod === 'cash'} onChange={() => setPayMethod('cash')} /> Tiền mặt
+      {/* Đã bỏ 3 ô chọn phương thức thanh toán, chỉ còn các ô nhập số tiền */}
+      <div style={{ marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <label style={{ fontSize: 15 }}>
+          Tiền mặt đã trả:
+          <input
+            ref={cashInputRef}
+            type="text"
+            inputMode="numeric"
+            min="0"
+            value={cashPaid.toLocaleString()}
+            onChange={e => {
+              const val = e.target.value.replace(/[^\d]/g, '');
+              setCashPaid(Number(val));
+            }}
+            onFocus={e => e.target.select()}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                bankInputRef.current && bankInputRef.current.focus();
+              }
+            }}
+            style={{ width: '100%', fontSize: 16, marginTop: 4 }}
+          />
         </label>
-        <label style={{ marginLeft: 16 }}>
-          <input type="radio" checked={payMethod === 'bank'} onChange={() => setPayMethod('bank')} /> Chuyển khoản
+        <label style={{ fontSize: 15 }}>
+          Chuyển khoản đã trả:
+          <input
+            ref={bankInputRef}
+            type="text"
+            inputMode="numeric"
+            min="0"
+            value={bankPaid.toLocaleString()}
+            onChange={e => {
+              const val = e.target.value.replace(/[^\d]/g, '');
+              setBankPaid(Number(val));
+            }}
+            onFocus={e => e.target.select()}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                // Focus vào nút Thanh Toán
+                const payBtn = document.getElementById('pay-btn');
+                if (payBtn) payBtn.focus();
+              }
+            }}
+            style={{ width: '100%', fontSize: 16, marginTop: 4 }}
+          />
+        </label>
+        <label style={{ fontSize: 15 }}>
+          Tiền chưa thanh toán:
+          <input
+            type="text"
+            value={Math.max(0, total - cashPaid - bankPaid).toLocaleString()}
+            readOnly
+            style={{ width: '100%', fontSize: 16, marginTop: 4, background: '#eee', color: '#888' }}
+            onFocus={e => e.target.select()}
+          />
         </label>
       </div>
-      <button style={{ width: '100%', fontSize: 18, marginTop: 8 }} onClick={handlePay}>Thanh Toán</button>
+      <button id="pay-btn" style={{ width: '100%', fontSize: 18, marginTop: 8 }} onClick={handlePay}>Thanh Toán</button>
       {lastOrder && (
         <div className="card" style={{ marginTop: 16 }}>
-          <h3>Đã thanh toán</h3>
+          <h3>Đã ghi nhận đơn hàng</h3>
+          <div>Mã đơn: {lastOrder.id}</div>
+          <div>Thời gian: {lastOrder.createdTime || new Date(lastOrder.createdAt).toLocaleTimeString('vi-VN')}</div>
           <div>Người mua: {lastOrder.buyer}</div>
-          <div>Phương thức: {lastOrder.payMethod === 'cash' ? 'Tiền mặt' : 'Chuyển khoản'}</div>
           <div>Tổng tiền: {lastOrder.total.toLocaleString()} VND</div>
+          <div>Tiền mặt đã trả: {Number(lastOrder.cashPaid || 0).toLocaleString()} VND</div>
+          <div>Chuyển khoản đã trả: {Number(lastOrder.bankPaid || 0).toLocaleString()} VND</div>
+          <div style={{ color: lastOrder.debt > 0 ? 'red' : 'green' }}>
+            Tiền chưa thanh toán: {Number(lastOrder.debt || 0).toLocaleString()} VND
+          </div>
           <ul>
             {lastOrder.items.map(item => (
               <li key={item.id}>
