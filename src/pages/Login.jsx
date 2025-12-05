@@ -4,6 +4,7 @@ const LOCAL_KEY = 'app_auth';
 const PASS_KEY = 'app_password';
 const QUESTION_KEY = 'app_sec_question';
 const ANSWER_KEY = 'app_sec_answer';
+const BIOMETRIC_KEY = 'app_biometric_registered';
 
 export default function Login({ onLogin }) {
   const [password, setPassword] = useState('');
@@ -14,6 +15,8 @@ export default function Login({ onLogin }) {
   const [oldPass, setOldPass] = useState('');
   const [biometricVerified, setBiometricVerified] = useState(false);
   const [showQuestionSetup, setShowQuestionSetup] = useState(false);
+  const [showBiometricSetup, setShowBiometricSetup] = useState(false);
+  const [setupPassword, setSetupPassword] = useState('');
   const [question, setQuestion] = useState(localStorage.getItem(QUESTION_KEY) || '');
   const [answer, setAnswer] = useState('');
   const [userAnswer, setUserAnswer] = useState('');
@@ -21,6 +24,7 @@ export default function Login({ onLogin }) {
   const [showSetup, setShowSetup] = useState(!localStorage.getItem(PASS_KEY));
 
   const isBiometricSupported = window.PublicKeyCredential !== undefined;
+  const isBiometricRegistered = localStorage.getItem(BIOMETRIC_KEY) === 'true';
   const savedPass = localStorage.getItem(PASS_KEY) || '123456';
   const savedQuestion = localStorage.getItem(QUESTION_KEY);
   const savedAnswer = localStorage.getItem(ANSWER_KEY);
@@ -35,9 +39,55 @@ export default function Login({ onLogin }) {
     }
   };
 
+  const handleBiometricSetup = async (e) => {
+    e.preventDefault();
+    if (!isBiometricSupported) {
+      setError('Thiết bị không hỗ trợ sinh trắc học!');
+      return;
+    }
+    if (setupPassword !== savedPass) {
+      setError('Mật khẩu không đúng!');
+      return;
+    }
+    try {
+      // Tạo credential mới
+      const credential = await navigator.credentials.create({
+        publicKey: {
+          challenge: new Uint8Array(32).map(() => Math.floor(Math.random() * 256)),
+          rp: { name: "Quản lý bán hàng" },
+          user: {
+            id: new Uint8Array(16).map(() => Math.floor(Math.random() * 256)),
+            name: "user@app.local",
+            displayName: "User"
+          },
+          pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+          timeout: 60000,
+          authenticatorSelection: {
+            userVerification: "preferred"
+          }
+        }
+      });
+      
+      if (credential) {
+        localStorage.setItem(BIOMETRIC_KEY, 'true');
+        setError('Đăng ký sinh trắc học thành công!');
+        setShowBiometricSetup(false);
+        setSetupPassword('');
+      } else {
+        setError('Không thể đăng ký sinh trắc học!');
+      }
+    } catch (e) {
+      setError('Lỗi đăng ký sinh trắc học: ' + e.message);
+    }
+  };
+
   const handleBiometricLogin = async () => {
     if (!isBiometricSupported) {
-      setError('Thiết bị không hỗ trợ sinh học!');
+      setError('Thiết bị không hỗ trợ sinh trắc học!');
+      return;
+    }
+    if (!isBiometricRegistered) {
+      setError('Vui lòng đăng ký sinh trắc học trước!');
       return;
     }
     try {
@@ -53,7 +103,7 @@ export default function Login({ onLogin }) {
         setError('Không nhận diện được!');
       }
     } catch (e) {
-      setError('Thiết bị không hỗ trợ hoặc chưa đăng ký sinh học!');
+      setError('Lỗi xác thực sinh trắc học!');
     }
   };
 
@@ -326,6 +376,26 @@ export default function Login({ onLogin }) {
               >
                 Thiết lập câu hỏi bảo mật
               </button>
+              {isBiometricSupported && (
+                <button
+                  style={{
+                    background:'none',
+                    border:'none',
+                    color:isBiometricRegistered ? '#10b981' : '#667eea',
+                    fontSize:'0.95rem',
+                    fontWeight:600,
+                    cursor:'pointer',
+                    padding:'8px 12px',
+                    borderRadius:8,
+                    transition:'all 0.25s ease'
+                  }}
+                  onMouseEnter={(e) => {e.target.style.background = isBiometricRegistered ? 'rgba(16, 185, 129, 0.1)' : 'rgba(102, 126, 234, 0.1)'}}
+                  onMouseLeave={(e) => {e.target.style.background = 'none'}}
+                  onClick={()=>setShowBiometricSetup(true)}
+                >
+                  {isBiometricRegistered ? '✓ ' : ''}Thiết lập sinh trắc học
+                </button>
+              )}
             </div>
             <div style={{
               textAlign:'center',
@@ -359,11 +429,107 @@ export default function Login({ onLogin }) {
               onMouseEnter={(e) => {if(isBiometricSupported){e.target.style.background = '#667eea'; e.target.style.color = 'white'}}}
               onMouseLeave={(e) => {if(isBiometricSupported){e.target.style.background = 'white'; e.target.style.color = '#667eea'}}}
               onClick={handleBiometricLogin}
-              disabled={!isBiometricSupported}
+              disabled={!isBiometricSupported || !isBiometricRegistered}
             >
-              🔐 Đăng nhập bằng sinh học
+              🔐 Đăng nhập bằng sinh trắc học
             </button>
+            {isBiometricSupported && !isBiometricRegistered && (
+              <div style={{
+                marginTop:12,
+                padding:'12px 16px',
+                borderRadius:10,
+                background:'#fef3c7',
+                border:'2px solid #fbbf24',
+                color:'#92400e',
+                fontSize:'0.9rem',
+                fontWeight:500,
+                textAlign:'center'
+              }}>
+                ⚠️ Chưa đăng ký sinh trắc học. Vui lòng thiết lập trước khi đăng nhập.
+              </div>
+            )}
           </>
+        ) : showBiometricSetup ? (
+          <form onSubmit={handleBiometricSetup} style={{display:'flex',flexDirection:'column',gap:20}}>
+            <div style={{
+              padding:'16px 20px',
+              background:'#eff6ff',
+              borderRadius:12,
+              border:'2px solid #3b82f6',
+              marginBottom:8
+            }}>
+              <div style={{fontSize:'1.1rem',fontWeight:700,color:'#1e40af',marginBottom:8}}>
+                🔐 Đăng ký sinh trắc học
+              </div>
+              <div style={{fontSize:'0.9rem',color:'#1e40af',lineHeight:1.6}}>
+                {isBiometricRegistered 
+                  ? 'Bạn đã đăng ký sinh trắc học. Có thể đăng ký lại để cập nhật.'
+                  : 'Đăng ký sinh trắc học để đăng nhập nhanh chóng và an toàn hơn.'}
+              </div>
+            </div>
+            <div style={{marginBottom:0}}>
+              <label style={{display:'block',fontWeight:600,fontSize:'0.95rem',color:'#4a5568',marginBottom:8}}>Xác nhận mật khẩu hiện tại</label>
+              <input
+                style={{
+                  width:'100%',
+                  padding:'14px 16px',
+                  borderRadius:12,
+                  border:'2px solid #e2e8f0',
+                  fontSize:'1rem',
+                  transition:'all 0.25s ease',
+                  outline:'none',
+                  boxSizing:'border-box'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                type="password"
+                value={setupPassword}
+                onChange={e=>setSetupPassword(e.target.value)}
+                placeholder="Nhập mật khẩu để xác nhận..."
+              />
+            </div>
+            <button
+              style={{
+                width:'100%',
+                padding:'14px 20px',
+                borderRadius:12,
+                border:'none',
+                background:'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                color:'white',
+                fontSize:'1rem',
+                fontWeight:600,
+                cursor:'pointer',
+                transition:'all 0.25s ease',
+                boxShadow:'0 4px 12px rgba(59, 130, 246, 0.3)',
+                marginTop:8
+              }}
+              onMouseEnter={(e) => {e.target.style.transform = 'translateY(-2px)'; e.target.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.4)'}}
+              onMouseLeave={(e) => {e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)'}}
+              type="submit"
+            >
+              🔐 Đăng ký sinh trắc học
+            </button>
+            <button
+              style={{
+                width:'100%',
+                padding:'12px 20px',
+                borderRadius:12,
+                border:'none',
+                background:'transparent',
+                color:'#667eea',
+                fontSize:'0.95rem',
+                fontWeight:600,
+                cursor:'pointer',
+                transition:'all 0.25s ease'
+              }}
+              onMouseEnter={(e) => {e.target.style.background = 'rgba(102, 126, 234, 0.1)'}}
+              onMouseLeave={(e) => {e.target.style.background = 'transparent'}}
+              type="button"
+              onClick={()=>{setShowBiometricSetup(false);setSetupPassword('');}}
+            >
+              ← Quay lại đăng nhập
+            </button>
+          </form>
         ) : showQuestionSetup ? (
           <form onSubmit={handleQuestionSetup} style={{display:'flex',flexDirection:'column',gap:20}}>
             <div style={{marginBottom:0}}>
