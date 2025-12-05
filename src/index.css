@@ -343,7 +343,7 @@ nav {
     }
     
     .hamburger-menu-overlay {
-        position: fixed;
+        position: fixed !important;
         top: 0;
         left: 0;
         width: 100vw;
@@ -352,7 +352,7 @@ nav {
         backdrop-filter: blur(30px) saturate(180%);
         -webkit-backdrop-filter: blur(30px) saturate(180%);
         z-index: 1000;
-        display: flex;
+        display: flex !important;
         flex-direction: column;
         padding-top: 80px;
         overflow-y: auto;
@@ -377,14 +377,16 @@ nav {
         border: 1px solid var(--border-light);
         border-radius: 14px;
         padding: 16px 20px;
-        margin-bottom: 12px;
+        margin: 0 0 12px 0;
         color: var(--text-primary) !important;
         font-weight: 600;
         font-size: 1.05rem;
         text-decoration: none;
-        display: flex;
+        display: flex !important;
         align-items: center;
         gap: 12px;
+        width: 100%;
+        box-sizing: border-box;
         transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
     

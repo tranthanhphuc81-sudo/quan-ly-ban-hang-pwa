@@ -146,99 +146,507 @@ export default function Login({ onLogin }) {
   };
 
   return (
-    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'linear-gradient(120deg,#e0eaff 0%,#f8fcff 100%)'}}>
-      <div style={{width:'100%',maxWidth:400,padding:'32px 24px',borderRadius:'18px',boxShadow:'0 4px 24px rgba(80,120,255,0.10)',background:'#fff',margin:'32px 0',boxSizing:'border-box'}}>
-        <h2 style={{textAlign:'center',fontWeight:700,fontSize:'1.7rem',color:'#3578e5',marginBottom:24,letterSpacing:'0.5px'}}>Đăng nhập</h2>
+    <div style={{
+      minHeight:'100vh',
+      display:'flex',
+      alignItems:'center',
+      justifyContent:'center',
+      background:'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      padding: '20px'
+    }}>
+      <div style={{
+        width:'100%',
+        maxWidth:420,
+        padding:'40px 32px',
+        borderRadius:'24px',
+        boxShadow:'0 12px 48px rgba(102, 126, 234, 0.25)',
+        background:'rgba(255, 255, 255, 0.95)',
+        backdropFilter:'blur(20px)',
+        WebkitBackdropFilter:'blur(20px)',
+        border:'1px solid rgba(255, 255, 255, 0.3)',
+        boxSizing:'border-box'
+      }}>
+        <h2 style={{
+          textAlign:'center',
+          fontWeight:700,
+          fontSize:'2rem',
+          background:'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          WebkitBackgroundClip:'text',
+          WebkitTextFillColor:'transparent',
+          backgroundClip:'text',
+          marginBottom:32,
+          letterSpacing:'0.5px'
+        }}>Đăng nhập</h2>
         {showSetup ? (
-          <form onSubmit={handleSetupPassword} style={{display:'flex',flexDirection:'column',gap:16}}>
-            <div className="field" style={{marginBottom:0}}>
-              <label className="label" style={{fontWeight:500}}>Thiết lập mật khẩu ban đầu</label>
-              <div className="control" style={{width:'100%'}}>
-                <input className="input" style={{borderRadius:8,width:'100%',boxSizing:'border-box'}} type="password" value={newPass} onChange={e=>setNewPass(e.target.value)} placeholder="Nhập mật khẩu mới..." />
-              </div>
+          <form onSubmit={handleSetupPassword} style={{display:'flex',flexDirection:'column',gap:20}}>
+            <div style={{marginBottom:0}}>
+              <label style={{display:'block',fontWeight:600,fontSize:'0.95rem',color:'#4a5568',marginBottom:8}}>Thiết lập mật khẩu ban đầu</label>
+              <input
+                style={{
+                  width:'100%',
+                  padding:'14px 16px',
+                  borderRadius:12,
+                  border:'2px solid #e2e8f0',
+                  fontSize:'1rem',
+                  transition:'all 0.25s ease',
+                  outline:'none',
+                  boxSizing:'border-box'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                type="password"
+                value={newPass}
+                onChange={e=>setNewPass(e.target.value)}
+                placeholder="Nhập mật khẩu mới..."
+              />
             </div>
-            <div className="field" style={{marginBottom:0}}>
-              <label className="label" style={{fontWeight:500}}>Xác nhận mật khẩu</label>
-              <div className="control" style={{width:'100%'}}>
-                <input className="input" style={{borderRadius:8,width:'100%',boxSizing:'border-box'}} type="password" value={confirmPass} onChange={e=>setConfirmPass(e.target.value)} placeholder="Nhập lại mật khẩu..." />
-              </div>
+            <div style={{marginBottom:0}}>
+              <label style={{display:'block',fontWeight:600,fontSize:'0.95rem',color:'#4a5568',marginBottom:8}}>Xác nhận mật khẩu</label>
+              <input
+                style={{
+                  width:'100%',
+                  padding:'14px 16px',
+                  borderRadius:12,
+                  border:'2px solid #e2e8f0',
+                  fontSize:'1rem',
+                  transition:'all 0.25s ease',
+                  outline:'none',
+                  boxSizing:'border-box'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                type="password"
+                value={confirmPass}
+                onChange={e=>setConfirmPass(e.target.value)}
+                placeholder="Nhập lại mật khẩu..."
+              />
             </div>
-            <button className="button is-success is-fullwidth" style={{marginTop:4,borderRadius:8}} type="submit">Thiết lập mật khẩu</button>
+            <button
+              style={{
+                width:'100%',
+                padding:'14px 20px',
+                borderRadius:12,
+                border:'none',
+                background:'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                color:'white',
+                fontSize:'1rem',
+                fontWeight:600,
+                cursor:'pointer',
+                transition:'all 0.25s ease',
+                boxShadow:'0 4px 12px rgba(16, 185, 129, 0.3)',
+                marginTop:8
+              }}
+              onMouseEnter={(e) => {e.target.style.transform = 'translateY(-2px)'; e.target.style.boxShadow = '0 6px 16px rgba(16, 185, 129, 0.4)'}}
+              onMouseLeave={(e) => {e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)'}}
+              type="submit"
+            >
+              Thiết lập mật khẩu
+            </button>
           </form>
         ) : !showReset && !showQuestionSetup ? (
           <>
-            <form onSubmit={handlePasswordLogin} style={{display:'flex',flexDirection:'column',gap:16}}>
-              <div className="field" style={{marginBottom:0}}>
-                <label className="label" style={{fontWeight:500}}>Mật khẩu</label>
-                <div className="control" style={{width:'100%'}}>
-                  <input className="input" style={{borderRadius:8,width:'100%',boxSizing:'border-box'}} type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Nhập mật khẩu..." />
-                </div>
+            <form onSubmit={handlePasswordLogin} style={{display:'flex',flexDirection:'column',gap:20}}>
+              <div style={{marginBottom:0}}>
+                <label style={{display:'block',fontWeight:600,fontSize:'0.95rem',color:'#4a5568',marginBottom:8}}>Mật khẩu</label>
+                <input
+                  style={{
+                    width:'100%',
+                    padding:'14px 16px',
+                    borderRadius:12,
+                    border:'2px solid #e2e8f0',
+                    fontSize:'1rem',
+                    transition:'all 0.25s ease',
+                    outline:'none',
+                    boxSizing:'border-box'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                  onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                  type="password"
+                  value={password}
+                  onChange={e=>setPassword(e.target.value)}
+                  placeholder="Nhập mật khẩu..."
+                />
               </div>
-              <button className="button is-primary is-fullwidth" style={{marginTop:4,borderRadius:8}} type="submit">Đăng nhập bằng mật khẩu</button>
+              <button
+                style={{
+                  width:'100%',
+                  padding:'14px 20px',
+                  borderRadius:12,
+                  border:'none',
+                  background:'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  color:'white',
+                  fontSize:'1rem',
+                  fontWeight:600,
+                  cursor:'pointer',
+                  transition:'all 0.25s ease',
+                  boxShadow:'0 4px 12px rgba(102, 126, 234, 0.3)',
+                  marginTop:8
+                }}
+                onMouseEnter={(e) => {e.target.style.transform = 'translateY(-2px)'; e.target.style.boxShadow = '0 6px 16px rgba(102, 126, 234, 0.4)'}}
+                onMouseLeave={(e) => {e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.3)'}}
+                type="submit"
+              >
+                Đăng nhập bằng mật khẩu
+              </button>
             </form>
-            <div style={{display:'flex',justifyContent:'center',margin:'16px 0 8px 0',gap:8}}>
-              <button className="button is-text" style={{fontSize:'1rem'}} onClick={()=>setShowReset(true)}>Quên mật khẩu?</button>
-              <button className="button is-text" style={{fontSize:'1rem'}} onClick={()=>setShowQuestionSetup(true)}>Thiết lập câu hỏi bảo mật</button>
+            <div style={{display:'flex',justifyContent:'center',margin:'20px 0 16px 0',gap:16,flexWrap:'wrap'}}>
+              <button
+                style={{
+                  background:'none',
+                  border:'none',
+                  color:'#667eea',
+                  fontSize:'0.95rem',
+                  fontWeight:600,
+                  cursor:'pointer',
+                  padding:'8px 12px',
+                  borderRadius:8,
+                  transition:'all 0.25s ease'
+                }}
+                onMouseEnter={(e) => {e.target.style.background = 'rgba(102, 126, 234, 0.1)'}}
+                onMouseLeave={(e) => {e.target.style.background = 'none'}}
+                onClick={()=>setShowReset(true)}
+              >
+                Quên mật khẩu?
+              </button>
+              <button
+                style={{
+                  background:'none',
+                  border:'none',
+                  color:'#667eea',
+                  fontSize:'0.95rem',
+                  fontWeight:600,
+                  cursor:'pointer',
+                  padding:'8px 12px',
+                  borderRadius:8,
+                  transition:'all 0.25s ease'
+                }}
+                onMouseEnter={(e) => {e.target.style.background = 'rgba(102, 126, 234, 0.1)'}}
+                onMouseLeave={(e) => {e.target.style.background = 'none'}}
+                onClick={()=>setShowQuestionSetup(true)}
+              >
+                Thiết lập câu hỏi bảo mật
+              </button>
             </div>
-            <div style={{textAlign:'center',marginBottom:8,color:'#aaa'}}>hoặc</div>
-            <button className="button is-link is-fullwidth" style={{borderRadius:8}} onClick={handleBiometricLogin} disabled={!isBiometricSupported}>
-              Đăng nhập bằng sinh học
+            <div style={{
+              textAlign:'center',
+              margin:'16px 0',
+              color:'#a0aec0',
+              fontSize:'0.9rem',
+              fontWeight:500,
+              position:'relative',
+              display:'flex',
+              alignItems:'center',
+              gap:12
+            }}>
+              <div style={{flex:1,height:1,background:'#e2e8f0'}}></div>
+              <span>hoặc</span>
+              <div style={{flex:1,height:1,background:'#e2e8f0'}}></div>
+            </div>
+            <button
+              style={{
+                width:'100%',
+                padding:'14px 20px',
+                borderRadius:12,
+                border:'2px solid #667eea',
+                background:'white',
+                color:'#667eea',
+                fontSize:'1rem',
+                fontWeight:600,
+                cursor:isBiometricSupported ? 'pointer' : 'not-allowed',
+                transition:'all 0.25s ease',
+                opacity:isBiometricSupported ? 1 : 0.5
+              }}
+              onMouseEnter={(e) => {if(isBiometricSupported){e.target.style.background = '#667eea'; e.target.style.color = 'white'}}}
+              onMouseLeave={(e) => {if(isBiometricSupported){e.target.style.background = 'white'; e.target.style.color = '#667eea'}}}
+              onClick={handleBiometricLogin}
+              disabled={!isBiometricSupported}
+            >
+              🔐 Đăng nhập bằng sinh học
             </button>
           </>
         ) : showQuestionSetup ? (
-          <form onSubmit={handleQuestionSetup} style={{display:'flex',flexDirection:'column',gap:16}}>
-            <div className="field" style={{marginBottom:0}}>
-              <label className="label" style={{fontWeight:500}}>Câu hỏi bảo mật</label>
-              <div className="control" style={{width:'100%'}}>
-                <input className="input" style={{borderRadius:8,width:'100%',boxSizing:'border-box'}} type="text" value={question} onChange={e=>setQuestion(e.target.value)} placeholder="Ví dụ: Tên thú cưng của bạn?" />
-              </div>
+          <form onSubmit={handleQuestionSetup} style={{display:'flex',flexDirection:'column',gap:20}}>
+            <div style={{marginBottom:0}}>
+              <label style={{display:'block',fontWeight:600,fontSize:'0.95rem',color:'#4a5568',marginBottom:8}}>Câu hỏi bảo mật</label>
+              <input
+                style={{
+                  width:'100%',
+                  padding:'14px 16px',
+                  borderRadius:12,
+                  border:'2px solid #e2e8f0',
+                  fontSize:'1rem',
+                  transition:'all 0.25s ease',
+                  outline:'none',
+                  boxSizing:'border-box'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                type="text"
+                value={question}
+                onChange={e=>setQuestion(e.target.value)}
+                placeholder="Ví dụ: Tên thú cưng của bạn?"
+              />
             </div>
-            <div className="field" style={{marginBottom:0}}>
-              <label className="label" style={{fontWeight:500}}>Đáp án</label>
-              <div className="control" style={{width:'100%'}}>
-                <input className="input" style={{borderRadius:8,width:'100%',boxSizing:'border-box'}} type="text" value={answer} onChange={e=>setAnswer(e.target.value)} placeholder="Nhập đáp án..." />
-              </div>
+            <div style={{marginBottom:0}}>
+              <label style={{display:'block',fontWeight:600,fontSize:'0.95rem',color:'#4a5568',marginBottom:8}}>Đáp án</label>
+              <input
+                style={{
+                  width:'100%',
+                  padding:'14px 16px',
+                  borderRadius:12,
+                  border:'2px solid #e2e8f0',
+                  fontSize:'1rem',
+                  transition:'all 0.25s ease',
+                  outline:'none',
+                  boxSizing:'border-box'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                type="text"
+                value={answer}
+                onChange={e=>setAnswer(e.target.value)}
+                placeholder="Nhập đáp án..."
+              />
             </div>
-            <button className="button is-success is-fullwidth" style={{marginTop:4,borderRadius:8}} type="submit">Lưu câu hỏi</button>
-            <button className="button is-text is-fullwidth" style={{marginTop:8}} type="button" onClick={()=>setShowQuestionSetup(false)}>Quay lại đăng nhập</button>
+            <button
+              style={{
+                width:'100%',
+                padding:'14px 20px',
+                borderRadius:12,
+                border:'none',
+                background:'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                color:'white',
+                fontSize:'1rem',
+                fontWeight:600,
+                cursor:'pointer',
+                transition:'all 0.25s ease',
+                boxShadow:'0 4px 12px rgba(16, 185, 129, 0.3)',
+                marginTop:8
+              }}
+              onMouseEnter={(e) => {e.target.style.transform = 'translateY(-2px)'; e.target.style.boxShadow = '0 6px 16px rgba(16, 185, 129, 0.4)'}}
+              onMouseLeave={(e) => {e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)'}}
+              type="submit"
+            >
+              Lưu câu hỏi
+            </button>
+            <button
+              style={{
+                width:'100%',
+                padding:'12px 20px',
+                borderRadius:12,
+                border:'none',
+                background:'transparent',
+                color:'#667eea',
+                fontSize:'0.95rem',
+                fontWeight:600,
+                cursor:'pointer',
+                transition:'all 0.25s ease'
+              }}
+              onMouseEnter={(e) => {e.target.style.background = 'rgba(102, 126, 234, 0.1)'}}
+              onMouseLeave={(e) => {e.target.style.background = 'transparent'}}
+              type="button"
+              onClick={()=>setShowQuestionSetup(false)}
+            >
+              ← Quay lại đăng nhập
+            </button>
           </form>
         ) : (
-          <form onSubmit={handleResetPassword} style={{display:'flex',flexDirection:'column',gap:16}}>
-            <div className="field" style={{marginBottom:0}}>
-              <label className="label" style={{fontWeight:500}}>Xác nhận mật khẩu cũ, sinh học hoặc câu hỏi bảo mật</label>
-              <div className="control" style={{width:'100%'}}>
-                <input className="input" style={{borderRadius:8,width:'100%',boxSizing:'border-box'}} type="password" value={oldPass} onChange={e=>setOldPass(e.target.value)} placeholder="Nhập mật khẩu cũ..." disabled={biometricVerified || questionOk} />
-              </div>
-              <button className="button is-link is-fullwidth" style={{marginTop:8,borderRadius:8}} type="button" onClick={handleBiometricVerify} disabled={biometricVerified || !isBiometricSupported}>Xác nhận bằng sinh học</button>
-              {biometricVerified && <span className="tag is-success ml-2">Đã xác thực sinh học</span>}
+          <form onSubmit={handleResetPassword} style={{display:'flex',flexDirection:'column',gap:20}}>
+            <div style={{marginBottom:0}}>
+              <label style={{display:'block',fontWeight:600,fontSize:'0.95rem',color:'#4a5568',marginBottom:8}}>Xác nhận mật khẩu cũ</label>
+              <input
+                style={{
+                  width:'100%',
+                  padding:'14px 16px',
+                  borderRadius:12,
+                  border:'2px solid #e2e8f0',
+                  fontSize:'1rem',
+                  transition:'all 0.25s ease',
+                  outline:'none',
+                  boxSizing:'border-box',
+                  opacity: biometricVerified || questionOk ? 0.5 : 1
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                type="password"
+                value={oldPass}
+                onChange={e=>setOldPass(e.target.value)}
+                placeholder="Nhập mật khẩu cũ..."
+                disabled={biometricVerified || questionOk}
+              />
+              <button
+                style={{
+                  width:'100%',
+                  padding:'12px 20px',
+                  marginTop:12,
+                  borderRadius:12,
+                  border:'2px solid #667eea',
+                  background:'white',
+                  color:'#667eea',
+                  fontSize:'0.95rem',
+                  fontWeight:600,
+                  cursor:(biometricVerified || !isBiometricSupported) ? 'not-allowed' : 'pointer',
+                  transition:'all 0.25s ease',
+                  opacity:(biometricVerified || !isBiometricSupported) ? 0.5 : 1
+                }}
+                onMouseEnter={(e) => {if(!biometricVerified && isBiometricSupported){e.target.style.background = '#667eea'; e.target.style.color = 'white'}}}
+                onMouseLeave={(e) => {if(!biometricVerified && isBiometricSupported){e.target.style.background = 'white'; e.target.style.color = '#667eea'}}}
+                type="button"
+                onClick={handleBiometricVerify}
+                disabled={biometricVerified || !isBiometricSupported}
+              >
+                {biometricVerified ? '✓ Đã xác thực sinh học' : '🔐 Xác nhận bằng sinh học'}
+              </button>
               {savedQuestion && !questionOk && (
-                <div className="mt-2">
-                  <label className="label" style={{fontWeight:500}}>Hoặc trả lời câu hỏi bảo mật:</label>
-                  <div className="control" style={{width:'100%'}}>
-                    <input className="input" style={{borderRadius:8,width:'100%',boxSizing:'border-box'}} type="text" value={userAnswer} onChange={e=>setUserAnswer(e.target.value)} placeholder={savedQuestion} />
-                  </div>
-                  <button className="button is-info is-fullwidth" style={{marginTop:8,borderRadius:8}} type="button" onClick={handleCheckQuestion}>Xác nhận đáp án</button>
-                  {questionOk && <span className="tag is-success ml-2">Đã xác thực câu hỏi</span>}
+                <div style={{marginTop:16,padding:16,background:'#f7fafc',borderRadius:12}}>
+                  <label style={{display:'block',fontWeight:600,fontSize:'0.9rem',color:'#4a5568',marginBottom:8}}>Hoặc trả lời câu hỏi bảo mật:</label>
+                  <input
+                    style={{
+                      width:'100%',
+                      padding:'12px 16px',
+                      borderRadius:10,
+                      border:'2px solid #e2e8f0',
+                      fontSize:'0.95rem',
+                      transition:'all 0.25s ease',
+                      outline:'none',
+                      boxSizing:'border-box'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                    onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                    type="text"
+                    value={userAnswer}
+                    onChange={e=>setUserAnswer(e.target.value)}
+                    placeholder={savedQuestion}
+                  />
+                  <button
+                    style={{
+                      width:'100%',
+                      padding:'10px 16px',
+                      marginTop:10,
+                      borderRadius:10,
+                      border:'none',
+                      background:'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                      color:'white',
+                      fontSize:'0.9rem',
+                      fontWeight:600,
+                      cursor:'pointer',
+                      transition:'all 0.25s ease'
+                    }}
+                    onMouseEnter={(e) => {e.target.style.transform = 'translateY(-1px)'}}
+                    onMouseLeave={(e) => {e.target.style.transform = 'translateY(0)'}}
+                    type="button"
+                    onClick={handleCheckQuestion}
+                  >
+                    Xác nhận đáp án
+                  </button>
+                </div>
+              )}
+              {questionOk && (
+                <div style={{marginTop:12,padding:12,background:'#d1fae5',borderRadius:10,color:'#065f46',fontSize:'0.9rem',fontWeight:600,textAlign:'center'}}>
+                  ✓ Đã xác thực câu hỏi bảo mật
                 </div>
               )}
             </div>
-            <div className="field" style={{marginBottom:0}}>
-              <label className="label" style={{fontWeight:500}}>Mật khẩu mới</label>
-              <div className="control" style={{width:'100%'}}>
-                <input className="input" style={{borderRadius:8,width:'100%',boxSizing:'border-box'}} type="password" value={newPass} onChange={e=>setNewPass(e.target.value)} placeholder="Nhập mật khẩu mới..." />
-              </div>
+            <div style={{marginBottom:0}}>
+              <label style={{display:'block',fontWeight:600,fontSize:'0.95rem',color:'#4a5568',marginBottom:8}}>Mật khẩu mới</label>
+              <input
+                style={{
+                  width:'100%',
+                  padding:'14px 16px',
+                  borderRadius:12,
+                  border:'2px solid #e2e8f0',
+                  fontSize:'1rem',
+                  transition:'all 0.25s ease',
+                  outline:'none',
+                  boxSizing:'border-box'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                type="password"
+                value={newPass}
+                onChange={e=>setNewPass(e.target.value)}
+                placeholder="Nhập mật khẩu mới..."
+              />
             </div>
-            <div className="field" style={{marginBottom:0}}>
-              <label className="label" style={{fontWeight:500}}>Xác nhận mật khẩu</label>
-              <div className="control" style={{width:'100%'}}>
-                <input className="input" style={{borderRadius:8,width:'100%',boxSizing:'border-box'}} type="password" value={confirmPass} onChange={e=>setConfirmPass(e.target.value)} placeholder="Nhập lại mật khẩu..." />
-              </div>
+            <div style={{marginBottom:0}}>
+              <label style={{display:'block',fontWeight:600,fontSize:'0.95rem',color:'#4a5568',marginBottom:8}}>Xác nhận mật khẩu</label>
+              <input
+                style={{
+                  width:'100%',
+                  padding:'14px 16px',
+                  borderRadius:12,
+                  border:'2px solid #e2e8f0',
+                  fontSize:'1rem',
+                  transition:'all 0.25s ease',
+                  outline:'none',
+                  boxSizing:'border-box'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                type="password"
+                value={confirmPass}
+                onChange={e=>setConfirmPass(e.target.value)}
+                placeholder="Nhập lại mật khẩu..."
+              />
             </div>
-            <button className="button is-success is-fullwidth" style={{marginTop:4,borderRadius:8}} type="submit">Đặt lại mật khẩu</button>
-            <button className="button is-text is-fullwidth" style={{marginTop:8}} type="button" onClick={()=>{setShowReset(false);setBiometricVerified(false);setOldPass('');setUserAnswer('');setQuestionOk(false);}}>Quay lại đăng nhập</button>
+            <button
+              style={{
+                width:'100%',
+                padding:'14px 20px',
+                borderRadius:12,
+                border:'none',
+                background:'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                color:'white',
+                fontSize:'1rem',
+                fontWeight:600,
+                cursor:'pointer',
+                transition:'all 0.25s ease',
+                boxShadow:'0 4px 12px rgba(16, 185, 129, 0.3)',
+                marginTop:8
+              }}
+              onMouseEnter={(e) => {e.target.style.transform = 'translateY(-2px)'; e.target.style.boxShadow = '0 6px 16px rgba(16, 185, 129, 0.4)'}}
+              onMouseLeave={(e) => {e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)'}}
+              type="submit"
+            >
+              Đặt lại mật khẩu
+            </button>
+            <button
+              style={{
+                width:'100%',
+                padding:'12px 20px',
+                borderRadius:12,
+                border:'none',
+                background:'transparent',
+                color:'#667eea',
+                fontSize:'0.95rem',
+                fontWeight:600,
+                cursor:'pointer',
+                transition:'all 0.25s ease'
+              }}
+              onMouseEnter={(e) => {e.target.style.background = 'rgba(102, 126, 234, 0.1)'}}
+              onMouseLeave={(e) => {e.target.style.background = 'transparent'}}
+              type="button"
+              onClick={()=>{setShowReset(false);setBiometricVerified(false);setOldPass('');setUserAnswer('');setQuestionOk(false);}}
+            >
+              ← Quay lại đăng nhập
+            </button>
           </form>
         )}
-        {error && <div className="notification is-danger mt-3" style={{borderRadius:8,textAlign:'center'}}>{error}</div>}
+        {error && (
+          <div style={{
+            marginTop:20,
+            padding:'16px 20px',
+            borderRadius:12,
+            background:error.includes('thành công') ? 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)' : 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+            color:error.includes('thành công') ? '#065f46' : '#991b1b',
+            fontSize:'0.95rem',
+            fontWeight:600,
+            textAlign:'center',
+            border:error.includes('thành công') ? '2px solid #6ee7b7' : '2px solid #fca5a5'
+          }}>
+            {error}
+          </div>
+        )}
       </div>
     </div>
   );
