@@ -5,6 +5,7 @@ const PASS_KEY = 'app_password';
 const QUESTION_KEY = 'app_sec_question';
 const ANSWER_KEY = 'app_sec_answer';
 const BIOMETRIC_KEY = 'app_biometric_registered';
+const CREDENTIAL_ID_KEY = 'app_credential_id';
 
 export default function Login({ onLogin }) {
   const [password, setPassword] = useState('');
@@ -50,25 +51,43 @@ export default function Login({ onLogin }) {
       return;
     }
     try {
-      // Tạo credential mới
+      // Tạo credential mới với cấu hình đầy đủ
+      const challenge = new Uint8Array(32);
+      crypto.getRandomValues(challenge);
+      
+      const userId = new Uint8Array(16);
+      crypto.getRandomValues(userId);
+      
       const credential = await navigator.credentials.create({
         publicKey: {
-          challenge: new Uint8Array(32).map(() => Math.floor(Math.random() * 256)),
-          rp: { name: "Quản lý bán hàng" },
+          challenge: challenge,
+          rp: {
+            name: "Quản lý bán hàng",
+            id: window.location.hostname
+          },
           user: {
-            id: new Uint8Array(16).map(() => Math.floor(Math.random() * 256)),
+            id: userId,
             name: "user@app.local",
             displayName: "User"
           },
-          pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+          pubKeyCredParams: [
+            { alg: -7, type: "public-key" },  // ES256
+            { alg: -257, type: "public-key" } // RS256
+          ],
           timeout: 60000,
           authenticatorSelection: {
-            userVerification: "preferred"
-          }
+            authenticatorAttachment: "platform",
+            userVerification: "preferred",
+            requireResidentKey: false
+          },
+          attestation: "none"
         }
       });
       
       if (credential) {
+        // Lưu credential ID để dùng khi đăng nhập
+        const credIdArray = Array.from(new Uint8Array(credential.rawId));
+        localStorage.setItem(CREDENTIAL_ID_KEY, JSON.stringify(credIdArray));
         localStorage.setItem(BIOMETRIC_KEY, 'true');
         setError('Đăng ký sinh trắc học thành công!');
         setShowBiometricSetup(false);
@@ -77,7 +96,14 @@ export default function Login({ onLogin }) {
         setError('Không thể đăng ký sinh trắc học!');
       }
     } catch (e) {
-      setError('Lỗi đăng ký sinh trắc học: ' + e.message);
+      console.error('Biometric setup error:', e);
+      if (e.name === 'NotAllowedError') {
+        setError('Bạn đã từ chối đăng ký sinh trắc học!');
+      } else if (e.name === 'InvalidStateError') {
+        setError('Sinh trắc học đã được đăng ký trước đó!');
+      } else {
+        setError('Lỗi đăng ký: ' + e.message);
+      }
     }
   };
 
@@ -90,12 +116,36 @@ export default function Login({ onLogin }) {
       setError('Vui lòng đăng ký sinh trắc học trước!');
       return;
     }
+    
     try {
-      const cred = await navigator.credentials.get({ publicKey: {
-        challenge: new Uint8Array([1,2,3,4]),
-        timeout: 60000,
-        userVerification: 'preferred',
-      }});
+      // Lấy credential ID đã lưu
+      const savedCredId = localStorage.getItem(CREDENTIAL_ID_KEY);
+      if (!savedCredId) {
+        setError('Không tìm thấy thông tin đăng ký. Vui lòng đăng ký lại!');
+        return;
+      }
+      
+      const credIdArray = JSON.parse(savedCredId);
+      const credId = new Uint8Array(credIdArray);
+      
+      // Tạo challenge mới
+      const challenge = new Uint8Array(32);
+      crypto.getRandomValues(challenge);
+      
+      const cred = await navigator.credentials.get({
+        publicKey: {
+          challenge: challenge,
+          rpId: window.location.hostname,
+          allowCredentials: [{
+            type: 'public-key',
+            id: credId,
+            transports: ['internal']
+          }],
+          timeout: 60000,
+          userVerification: 'preferred'
+        }
+      });
+      
       if (cred) {
         localStorage.setItem(LOCAL_KEY, 'ok');
         onLogin();
@@ -103,7 +153,14 @@ export default function Login({ onLogin }) {
         setError('Không nhận diện được!');
       }
     } catch (e) {
-      setError('Lỗi xác thực sinh trắc học!');
+      console.error('Biometric login error:', e);
+      if (e.name === 'NotAllowedError') {
+        setError('Bạn đã từ chối xác thực sinh trắc học!');
+      } else if (e.name === 'InvalidStateError') {
+        setError('Vui lòng đăng ký lại sinh trắc học!');
+      } else {
+        setError('Lỗi xác thực: ' + e.message);
+      }
     }
   };
 
