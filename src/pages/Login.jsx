@@ -350,7 +350,7 @@ export default function Login({ onLogin }) {
               Thiết lập mật khẩu
             </button>
           </form>
-        ) : !showReset && !showQuestionSetup ? (
+        ) : !showReset && !showQuestionSetup && !showBiometricSetup ? (
           <>
             <form onSubmit={handlePasswordLogin} style={{display:'flex',flexDirection:'column',gap:20}}>
               <div style={{marginBottom:0}}>
