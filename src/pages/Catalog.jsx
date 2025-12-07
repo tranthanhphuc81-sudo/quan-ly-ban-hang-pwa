@@ -4,7 +4,9 @@ import ProductContext from '../ProductContext';
 
 function Catalog() {
   const { products, setProducts } = useContext(ProductContext);
-  const [form, setForm] = useState({ name: '', barcode: '', price: '', cost: '', stock: '', category: '', importDate: '', supplier: '', paidAmount: '' });
+  // Lấy ngày hiện tại theo định dạng YYYY-MM-DD
+  const getTodayDate = () => new Date().toISOString().slice(0, 10);
+  const [form, setForm] = useState({ name: '', barcode: '', price: '', cost: '', stock: '', category: '', importDate: getTodayDate(), supplier: '', paidAmount: '' });
   const [editingId, setEditingId] = useState(null);
 
 
@@ -89,7 +91,7 @@ function Catalog() {
         setProducts([...products, { id: Date.now(), ...form, supplier, price: +form.price, cost: +form.cost || 0, stock: +form.stock || 0, category: form.category, importDate, importTime }]);
       }
     }
-    setForm({ name: '', barcode: '', price: '', cost: '', stock: '', category: '', importDate: '', supplier: '', paidAmount: '' });
+    setForm({ name: '', barcode: '', price: '', cost: '', stock: '', category: '', importDate: getTodayDate(), supplier: '', paidAmount: '' });
     setEditingId(null);
   };
 
